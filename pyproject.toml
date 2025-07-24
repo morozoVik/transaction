@@ -1,0 +1,60 @@
+[tool.poetry]
+name = "transaction-analysis"
+version = "0.1.0"
+description = "Application for analyzing bank transactions"
+authors = ["Admin <ulb9@mail.ru>"]
+readme = "README.md"
+license = "MIT"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.13"
+pandas = "^2.0.0"
+openpyxl = "^3.1.0"
+requests = "^2.31.0"
+python-dotenv = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.1"
+pytest-cov = "^6.2.1"
+flake8 = "^6.0.0"
+isort = "^5.12.0"
+black = "^23.7.0"
+mypy = "^1.5.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 119
+exclude = '''
+/(
+    \.git
+    | \.venv
+)/
+'''
+
+[tool.isort]
+line_length = 119
+profile = "black"
+
+[tool.mypy]
+disallow_untyped_defs = true
+warn_return_any = true
+exclude = '''
+^(
+    venv/
+    | \.venv/
+)/
+'''
+
+[tool.flake8]
+max-line-length = 119
+exclude = ".git,__pycache__,venv,.venv"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+addopts = "-v --cov=src --cov-report=term-missing"

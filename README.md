@@ -1,0 +1,17 @@
+# Transaction Analysis App
+
+Приложение для анализа банковских транзакций из Excel-файла.
+
+## Функциональность
+- Генерация JSON данных для веб-страниц
+- Формирование Excel-отчетов
+- Анализ транзакций
+
+## Установка
+1. Установите Poetry: `curl -sSL https://install.python-poetry.org | python3 -`
+2. Клонируйте репозиторий
+3. Установите зависимости: `poetry install`
+4. Создайте файл .env на основе .env_template
+
+## Запуск
+`poetry run python src/main.py`
