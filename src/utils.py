@@ -137,3 +137,40 @@ def process_transactions_data(date_str: str) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logging.error(f"Ошибка обработки транзакций: {e}")
         return {"cards": {}, "top_transactions": []}
+
+
+def validate_transaction(transaction: Dict[str, Any]) -> bool:
+    """
+    Проверяет валидность структуры и данных транзакции.
+    """
+    try:
+        if not isinstance(transaction, dict):
+            return False
+
+        required = {"Дата операции", "Сумма операции"}
+        if not all(key in transaction for key in required):
+            return False
+
+        datetime.strptime(transaction["Дата операции"], "%Y-%m-%d")
+        float(transaction["Сумма операции"])
+        return True
+
+    except (ValueError, TypeError):
+        return False
+
+
+def filter_by_month(transactions: List[Dict[str, Any]], month: str) -> List[Dict[str, Any]]:
+    """
+    Фильтрует транзакции по указанному месяцу.
+    """
+    try:
+        year, month = map(int, month.split("-"))
+        return [
+            t
+            for t in transactions
+            if validate_transaction(t)
+            and datetime.strptime(t["Дата операции"], "%Y-%m-%d").year == year
+            and datetime.strptime(t["Дата операции"], "%Y-%m-%d").month == month
+        ]
+    except ValueError:
+        return []

@@ -5,7 +5,15 @@ from unittest.mock import Mock, patch
 import pandas as pd
 import pytest
 
-from src.utils import get_currency_rates, get_greeting, get_stock_prices, load_user_settings, process_transactions_data
+from src.utils import (
+    filter_by_month,
+    get_currency_rates,
+    get_greeting,
+    get_stock_prices,
+    load_user_settings,
+    process_transactions_data,
+    validate_transaction,
+)
 
 
 class TestGetGreeting:
@@ -137,3 +145,52 @@ class TestProcessTransactionsData:
     def test_file_error(self, mock_read_excel):
         result = process_transactions_data("2023-01-15 12:00:00")
         assert result == {"cards": {}, "top_transactions": []}
+
+
+class TestValidateTransaction:
+    """Тесты для функции validate_transaction"""
+
+    @pytest.mark.parametrize(
+        "transaction,expected",
+        [
+            ({"Дата операции": "2023-01-01", "Сумма операции": 100}, True),
+            ({"Дата операции": "2023-01-01", "Сумма операции": "100.50"}, True),
+            ({"Дата": "2023-01-01", "Amount": 100}, False),
+            ({"Дата операции": "2023-01-01"}, False),
+            ({"Дата операции": "01-01-2023", "Сумма операции": 100}, False),
+            ({"Дата операции": "2023-01-01", "Сумма операции": "abc"}, False),
+        ],
+    )
+    def test_validation(self, transaction, expected):
+        """Параметризованный тест валидации"""
+        assert validate_transaction(transaction) == expected
+
+
+class TestFilterByMonth:
+    """Тесты для функции filter_by_month"""
+
+    @pytest.fixture
+    def sample_transactions(self):
+        return [
+            {"Дата операции": "2023-05-01", "Сумма операции": 100},
+            {"Дата операции": "2023-05-15", "Сумма операции": 200},
+            {"Дата операции": "2023-06-01", "Сумма операции": 300},
+            {"Дата": "2023-05-01", "Amount": 400},  # Невалидная
+        ]
+
+    def test_filter_correct_month(self, sample_transactions):
+        """Тест фильтрации по корректному месяцу"""
+        filtered = filter_by_month(sample_transactions, "2023-05")
+        assert len(filtered) == 2
+        assert all(t["Дата операции"].startswith("2023-05") for t in filtered)
+
+    def test_filter_wrong_month(self, sample_transactions):
+        """Тест фильтрации по другому месяцу"""
+        filtered = filter_by_month(sample_transactions, "2023-06")
+        assert len(filtered) == 1
+        assert filtered[0]["Сумма операции"] == 300
+
+    def test_invalid_month_format(self, sample_transactions):
+        """Тест невалидного формата месяца"""
+        filtered = filter_by_month(sample_transactions, "2023")
+        assert len(filtered) == 0
