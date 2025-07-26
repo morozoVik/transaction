@@ -3,6 +3,7 @@ import logging
 import os
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -174,3 +175,27 @@ def filter_by_month(transactions: List[Dict[str, Any]], month: str) -> List[Dict
         ]
     except ValueError:
         return []
+
+
+def save_to_json(data: Dict[str, Any], filename: str) -> None:
+    """Сохраняет данные в JSON файл."""
+    try:
+        with Path(filename).open("w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        raise ValueError(f"Ошибка сохранения в JSON: {e}")
+
+
+def validate_dataframe(df: pd.DataFrame, required_columns: set) -> bool:
+    """Проверяет валидность DataFrame."""
+    return all(col in df.columns for col in required_columns) and not df.empty
+
+
+def parse_date(date_str: str, default=None):
+    """Парсит дату из строки с обработкой ошибок."""
+    from datetime import datetime
+
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d") if date_str else default
+    except ValueError:
+        return default

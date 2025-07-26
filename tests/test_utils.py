@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pandas as pd
@@ -11,7 +12,10 @@ from src.utils import (
     get_greeting,
     get_stock_prices,
     load_user_settings,
+    parse_date,
     process_transactions_data,
+    save_to_json,
+    validate_dataframe,
     validate_transaction,
 )
 
@@ -194,3 +198,47 @@ class TestFilterByMonth:
         """Тест невалидного формата месяца"""
         filtered = filter_by_month(sample_transactions, "2023")
         assert len(filtered) == 0
+
+
+class TestUtils:
+    """Тесты для вспомогательных функций из utils.py"""
+
+    def test_save_to_json(self, tmp_path):
+        """Тест сохранения данных в JSON файл."""
+        test_file = tmp_path / "test.json"
+        test_data = {"key": "value"}
+
+        save_to_json(test_data, str(test_file))
+
+        assert test_file.exists()
+        with open(test_file, "r", encoding="utf-8") as f:
+            assert json.load(f) == test_data
+
+    def test_validate_dataframe(self):
+        """Тест валидации DataFrame."""
+        valid_df = pd.DataFrame({"col1": [1], "col2": [2]})
+        invalid_df = pd.DataFrame()
+
+        assert validate_dataframe(valid_df, {"col1", "col2"}) is True
+        assert validate_dataframe(invalid_df, {"col1"}) is False
+        assert validate_dataframe(valid_df, {"col3"}) is False
+
+    @pytest.mark.parametrize(
+        "date_str,expected", [("2023-01-01", datetime(2023, 1, 1)), (None, None), ("invalid", None)]
+    )
+    def test_parse_date(self, date_str, expected):
+        """Тест парсинга даты с разными входными данными."""
+        assert parse_date(date_str) == expected
+
+
+class TestDataFrameUtils:
+    """Тесты для работы с DataFrame"""
+
+    @pytest.fixture
+    def sample_df(self):
+        return pd.DataFrame({"Дата операции": ["01.01.2023 12:00:00"], "Сумма платежа": [100]})
+
+    def test_validate_transactions(self, sample_df):
+        """Тест валидации DataFrame с транзакциями."""
+        assert validate_dataframe(sample_df, {"Дата операции", "Сумма платежа"})
+        assert not validate_dataframe(sample_df, {"Несуществующая колонка"})
